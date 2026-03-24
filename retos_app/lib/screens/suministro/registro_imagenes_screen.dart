@@ -70,9 +70,7 @@ class _RegistroImagenesScreenState extends State<RegistroImagenesScreen> {
       final int idChecadorReal = prefs.getInt('id_usuario') ?? 1;
       final int idEmpresaReal = prefs.getInt('id_empresa') ?? 1;
 
-      final String ipServidor = kIsWeb
-          ? 'http://localhost:3000'
-          : 'http://10.0.2.2:3000';
+      final String ipServidor = 'https://api-retos.onrender.com';
       final url = Uri.parse('$ipServidor/api/suministros');
 
       // --- 3. MANDAMOS LOS IDs REALES AL BACKEND ---

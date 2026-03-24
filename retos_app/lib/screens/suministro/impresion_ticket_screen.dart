@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -31,9 +30,7 @@ class _ImpresionTicketScreenState extends State<ImpresionTicketScreen> {
     });
 
     try {
-      final String ipServidor = kIsWeb
-          ? 'http://localhost:3000'
-          : 'http://10.0.2.2:3000';
+      final String ipServidor = 'https://api-retos.onrender.com';
       // Construimos la URL con el folio que escribió el usuario
       final url = Uri.parse('$ipServidor/api/suministros/$folioBuscado');
 

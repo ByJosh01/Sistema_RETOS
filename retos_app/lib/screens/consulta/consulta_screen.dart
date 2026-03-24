@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -29,9 +28,7 @@ class _ConsultaScreenState extends State<ConsultaScreen> {
     });
 
     try {
-      final String ipServidor = kIsWeb
-          ? 'http://localhost:3000'
-          : 'http://10.0.2.2:3000';
+      final String ipServidor = 'https://api-retos.onrender.com';
       final url = Uri.parse('$ipServidor/api/suministros');
 
       final response = await http.get(url);

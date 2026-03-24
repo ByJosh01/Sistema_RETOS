@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart'; // <-- 1. Importamos la memoria
+import 'package:shared_preferences/shared_preferences.dart';
 import 'ticket_acarreo_screen.dart';
 
 class RegistroImagenesAcarreoScreen extends StatefulWidget {
@@ -70,18 +70,17 @@ class _RegistroImagenesAcarreoScreenState
       final int idChecadorReal = prefs.getInt('id_usuario') ?? 1;
       final int idEmpresaReal = prefs.getInt('id_empresa') ?? 1;
 
-      final String ipServidor = kIsWeb
-          ? 'http://localhost:3000'
-          : 'http://10.0.2.2:3000';
+      // CONEXIÓN A LA NUBE EN RENDER
+      final String ipServidor = 'https://api-retos.onrender.com';
       final url = Uri.parse('$ipServidor/api/acarreos');
 
       // --- 3. ENVIAR LOS DATOS REALES A NODE.JS ---
       final bodyData = json.encode({
         "folio_suministro": widget.datosViaje['folio_suministro'],
-        "id_checador_obra": idChecadorReal, // Dato dinámico
+        "id_checador_obra": idChecadorReal,
         "distancia_km": widget.distanciaKm,
         "cantidad_m3_recibida": widget.cantidadM3,
-        "id_empresa": idEmpresaReal, // Dato dinámico
+        "id_empresa": idEmpresaReal,
       });
 
       final response = await http.post(

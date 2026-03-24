@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -57,9 +56,7 @@ class _SuministroScreenState extends State<SuministroScreen> {
 
   Future<void> _cargarCatalogos() async {
     try {
-      final String ipServidor = kIsWeb
-          ? 'http://localhost:3000'
-          : 'http://10.0.2.2:3000';
+      final String ipServidor = 'https://api-retos.onrender.com';
 
       // AHORA USA EL ID DE LA EMPRESA REAL
       final url = Uri.parse('$ipServidor/api/catalogos?id_empresa=$_idEmpresa');
