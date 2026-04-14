@@ -2,10 +2,15 @@
 const dbPool = require('../config/database');
 
 const registrarSuministro = async (req, res) => {
+    // 1. Ya NO extraemos id_empresa ni id_checador de aquí
     const { 
-        id_checador, id_banco, id_material, id_destino, 
-        id_unidad, cantidad_m3, id_empresa, id_residente, id_sindicato 
+        id_banco, id_material, id_destino, 
+        id_unidad, cantidad_m3, id_residente, id_sindicato 
     } = req.body;
+    
+    // 2. Extraemos los datos sensibles directamente del token de seguridad
+    const id_empresa = req.usuarioSeguro.id_empresa;
+    const id_checador = req.usuarioSeguro.id_usuario;
     
     try {
         const folioGenerado = 'GYB-' + Math.floor(1000 + Math.random() * 9000);
@@ -17,7 +22,8 @@ const registrarSuministro = async (req, res) => {
              id_destino, id_residente, id_sindicato, id_unidad, cantidad_m3, estatus) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'En tránsito')`,
             [
-                folioGenerado, id_empresa || 1, fechaHoraActual, id_checador || 1, 
+                // Usamos los IDs extraídos del token
+                folioGenerado, id_empresa, fechaHoraActual, id_checador, 
                 id_banco, id_material, id_destino, id_residente, id_sindicato, id_unidad, cantidad_m3
             ]
         );
@@ -33,9 +39,9 @@ const registrarSuministro = async (req, res) => {
     }
 };
 
-// --- AQUI ESTA LA MAGIA NUEVA ---
 const buscarTicket = async (req, res) => {
     const { folio } = req.params; 
+    const id_empresa = req.usuarioSeguro.id_empresa; // <-- Seguridad SaaS
 
     try {
         const [viajes] = await dbPool.query(`
@@ -54,14 +60,14 @@ const buscarTicket = async (req, res) => {
             LEFT JOIN cat_unidades u ON rs.id_unidad = u.id_unidad
             LEFT JOIN cat_usuarios r ON rs.id_residente = r.id_usuario
             LEFT JOIN cat_sindicatos s ON rs.id_sindicato = s.id_sindicato
-            WHERE rs.folio_suministro = ?
-        `, [folio]);
+            WHERE rs.folio_suministro = ? AND rs.id_empresa = ? 
+        `, [folio, id_empresa]); // <-- Condición vital: Folio Y Empresa
 
         if (viajes.length > 0) {
-            // Mandamos todo el objeto 'viaje' de regreso a Flutter
             res.json({ exito: true, viaje: viajes[0] });
         } else {
-            res.status(404).json({ exito: false, mensaje: 'El folio no existe' });
+            // El mensaje es genérico para no darle pistas a quien intente adivinar folios de otras empresas
+            res.status(404).json({ exito: false, mensaje: 'El folio no existe o pertenece a otra empresa' });
         }
     } catch (error) {
         console.error('Error al buscar ticket:', error);
@@ -70,6 +76,8 @@ const buscarTicket = async (req, res) => {
 };
 
 const obtenerHistorial = async (req, res) => {
+    const id_empresa = req.usuarioSeguro.id_empresa; // <-- Seguridad SaaS
+
     try {
         const [historial] = await dbPool.query(`
             SELECT 
@@ -80,8 +88,10 @@ const obtenerHistorial = async (req, res) => {
             LEFT JOIN cat_materiales m ON rs.id_material = m.id_material
             LEFT JOIN cat_destinos d ON rs.id_destino = d.id_destino
             LEFT JOIN cat_unidades u ON rs.id_unidad = u.id_unidad
+            WHERE rs.id_empresa = ? 
             ORDER BY rs.fecha_hora DESC
-        `);
+        `, [id_empresa]); // <-- Aislamos los datos, el usuario solo ve su historial
+        
         res.json({ exito: true, datos: historial });
     } catch (error) {
         console.error('Error al obtener el historial:', error);

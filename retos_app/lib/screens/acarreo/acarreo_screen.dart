@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart'; // <-- 1. Importamos la memoria para leer el token
 import 'recepcion_formulario_screen.dart';
 
 class AcarreoScreen extends StatefulWidget {
@@ -30,17 +31,43 @@ class _AcarreoScreenState extends State<AcarreoScreen> {
     });
 
     try {
+      // --- NUEVO: LEER EL TOKEN DE LA MEMORIA ---
+      final prefs = await SharedPreferences.getInstance();
+      final String? tokenSeguridad = prefs.getString('token_seguridad');
+
+      if (tokenSeguridad == null) {
+        _mostrarAlerta(
+          'Error: Sesión no válida. Vuelva a iniciar sesión.',
+          Colors.red,
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
       final String ipServidor = 'https://api-retos.onrender.com';
       final url = Uri.parse('$ipServidor/api/suministros/$folioBuscado');
 
-      final response = await http.get(url);
+      // --- MODIFICADO: Agregamos los headers con el token de seguridad ---
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer $tokenSeguridad', // <-- El guardia lo revisará
+        },
+      );
+
       final data = json.decode(response.body);
 
       if (response.statusCode == 200 && data['exito'] == true) {
         _mostrarAlerta(
-          'Camion encontrado! Listo para recibir.',
+          '¡Camión encontrado! Listo para recibir.',
           Colors.green[700]!,
         );
+
+        if (!mounted) return;
 
         // VIAJAMOS PASANDO TODO EL MAPA DE DATOS
         Navigator.push(
@@ -57,11 +84,13 @@ class _AcarreoScreenState extends State<AcarreoScreen> {
         );
       }
     } catch (e) {
-      _mostrarAlerta('Error de conexion con el servidor', Colors.red);
+      _mostrarAlerta('Error de conexión con el servidor', Colors.red);
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -88,7 +117,7 @@ class _AcarreoScreenState extends State<AcarreoScreen> {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text(
-          'Recepcion de Viaje',
+          'Recepción de Viaje',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -148,7 +177,7 @@ class _AcarreoScreenState extends State<AcarreoScreen> {
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    'Toque aqui para abrir la camara y escanear el codigo QR.',
+                    'Toque aquí para abrir la cámara y escanear el código QR.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white70, fontSize: 13),
                   ),
@@ -167,12 +196,12 @@ class _AcarreoScreenState extends State<AcarreoScreen> {
                     ),
                     onPressed: () {
                       _mostrarAlerta(
-                        'El escaner se activara en movil.',
+                        'El escáner se activará en móvil.',
                         Colors.blueGrey,
                       );
                     },
                     child: const Text(
-                      'ABRIR CAMARA',
+                      'ABRIR CÁMARA',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -281,7 +310,7 @@ class _AcarreoScreenState extends State<AcarreoScreen> {
                               ),
                             )
                           : const Text(
-                              'BUSCAR CAMION',
+                              'BUSCAR CAMIÓN',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 15,
