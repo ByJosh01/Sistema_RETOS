@@ -4,6 +4,7 @@ import '../suministro/suministro_screen.dart';
 import '../suministro/impresion_ticket_screen.dart';
 import '../consulta/consulta_screen.dart';
 import '../acarreo/acarreo_screen.dart';
+import 'admin_dashboard_screen.dart'; // <-- NUEVO: Importamos el panel web
 
 class MainMenuScreen extends StatelessWidget {
   final String nombre;
@@ -13,7 +14,18 @@ class MainMenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool esObra = rol.toLowerCase().contains('obra');
+    final String rolMin = rol.toLowerCase();
+
+    // --- 1. EL AGENTE DE TRÁNSITO SAAS ---
+    // Si el usuario es de oficina/gerencia, lo mandamos al Dashboard Web
+    if (rolMin.contains('residente') ||
+        rolMin.contains('admin') ||
+        rolMin.contains('gerencia')) {
+      return AdminDashboardScreen(nombre: nombre, rol: rol);
+    }
+
+    // --- 2. SI ES CHECADOR (CAMPO), LE MOSTRAMOS LA APP MÓVIL ---
+    final bool esObra = rolMin.contains('obra');
     final String tituloPantalla = esObra
         ? 'Acarreo Material'
         : 'Suministro Material';
@@ -76,97 +88,73 @@ class MainMenuScreen extends StatelessWidget {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    if (rol.toLowerCase().contains('banco') ||
-                        rol.toLowerCase().contains('admin')) ...[
+                    // Botones exclusivos de Banco
+                    if (rolMin.contains('banco')) ...[
                       _buildMenuButton(
                         context,
                         'Registro de Suministro',
                         Icons.edit_document,
                         Colors.orange[700]!,
-                        () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SuministroScreen(),
-                            ),
-                          );
-                        },
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SuministroScreen(),
+                          ),
+                        ),
                       ),
                       _buildMenuButton(
                         context,
-                        'Impresion de Ticket',
+                        'Impresión de Ticket',
                         Icons.print,
                         Colors.green[700]!,
-                        () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const ImpresionTicketScreen(),
-                            ),
-                          );
-                        },
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ImpresionTicketScreen(),
+                          ),
+                        ),
                       ),
                     ],
-                    if (esObra || rol.toLowerCase().contains('admin')) ...[
+                    // Botones exclusivos de Obra
+                    if (esObra) ...[
                       _buildMenuButton(
                         context,
                         'Registro de Acarreo',
                         Icons.handshake,
                         Colors.teal[700]!,
-                        () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AcarreoScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      _buildMenuButton(
-                        context,
-                        'Impresion de Ticket',
-                        Icons.print,
-                        Colors.green[700]!,
-                        () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const ImpresionTicketScreen(),
-                            ),
-                          );
-                        },
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AcarreoScreen(),
+                          ),
+                        ),
                       ),
                     ],
+                    // Botones generales
                     _buildMenuButton(
                       context,
                       'Consulta',
                       Icons.manage_search,
                       Colors.purple[700]!,
-                      () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ConsultaScreen(),
-                          ),
-                        );
-                      },
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ConsultaScreen(),
+                        ),
+                      ),
                     ),
                     _buildMenuButton(
                       context,
                       'Salir',
                       Icons.logout,
                       Colors.blue[700]!,
-                      () {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginScreen(),
-                          ),
-                          (route) => false,
-                        );
-                      },
+                      () => Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                        (route) => false,
+                      ),
                     ),
                   ],
                 ),
